@@ -17,4 +17,13 @@ val prog =
            OpExp(NumExp 10, Times, IdExp"a"))),
    PrintStm[IdExp "b"]))
 
+fun max x y = if x >= y then x else y;
+fun maxlist (x::xs) = max x (maxlist xs)
+  | maxlist [] = 0;
 
+fun maxargs (CompoundStm (s1, s2)) = max (maxargs s1) (maxargs s2)
+  | maxargs (AssignStm (_, e)) = maxargs_exp e
+  | maxargs (PrintStm es) =  max (length es) (maxlist (map maxargs_exp es))
+and maxargs_exp (OpExp (e1, _, e2)) = max (maxargs_exp e1) (maxargs_exp e2)
+  | maxargs_exp (EseqExp (s, e)) = max (maxargs s) (maxargs_exp e)
+  | maxargs_exp _ = 0;
