@@ -1,0 +1,6 @@
+Start SML/NJ in this directory.
+>$ sml
+Run CM.make.
+- CM.make "sources.cm";
+Parse tiger language.
+- Parse.parse "hoge.tig";
