@@ -5,13 +5,34 @@
   | INT of int | STRING of string 
   | COMMA | COLON | SEMICOLON | LPAREN | RPAREN | LBRACK | RBRACK 
   | LBRACE | RBRACE | DOT 
-  | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE
+  | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE | UMINUS
   | AND | OR | ASSIGN
   | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF 
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
 %nonterm  exp | program
+	| decs | dec
+	| tydec | ty | tyfields
+	| vardec | fundec
+	| lvalue
+	| arithmetic | boolean | comparison | negation | strcomp
+	| seqexp | sequencing
+	| novalue
+	| funccall
+	| param_list
+	| record_creation | record_fields | fields
+	| array_creation
+	| assign
+	| if_then_else | if_then
+	| while | forloop
+	| let
+
+%left AND OR
+%nonassoc EQ NEQ LT GT LE GE
+%left PLUS MINUS
+%left TIMES DIVIDE
+%left UMINUS
 
 %pos int
 %verbose
@@ -34,5 +55,111 @@
 
 program	: exp				()
 
-	
-exp: 			()
+exp: lvalue				()
+	| NIL				()
+	| sequencing				()
+	| novalue				()
+	| INT				()
+	| STRING				()
+	| negation				()
+	| funccall				()
+	| arithmetic			()
+	| comparison			()
+	| strcomp				()
+	| boolean				()
+	| record_creation				()
+	| array_creation				()
+	| assign				()
+	| if_then_else				()
+	| if_then				()
+	| while				()
+	| forloop 				()
+	| BREAK				()
+	| let				()
+
+decs: dec decs					()
+	| NIL					()
+
+dec: tydec				()
+	| vardec				()
+	| fundec				()
+
+tydec: TYPE ID EQ ty				()
+
+ty: ID				()
+	| LBRACE tyfields RBRACE				()
+	| ARRAY OF ID				()
+
+tyfields: NIL				()
+	| ID COLON ID 				()
+	| ID COLON ID COMMA tyfields				()
+
+vardec: VAR ID ASSIGN exp				()
+	| VAR ID COLON ID ASSIGN exp 					()
+
+fundec: FUNCTION ID LPAREN tyfields RPAREN EQ exp				()
+	| FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp				()
+
+lvalue: ID				()
+	| lvalue DOT ID				()
+	| ID LBRACK exp RBRACK				()
+	| lvalue LBRACK exp RBRACK				()
+
+arithmetic: exp PLUS exp				()
+	| exp MINUS exp				()
+	| exp TIMES exp				()
+	| exp DIVIDE exp				()
+
+boolean: exp AND exp 				()
+	| exp OR exp 				()
+
+comparison: exp EQ exp				()
+	| exp NEQ exp				()
+	| exp LT exp				()
+	| exp GT exp				()
+	| exp LE exp				()
+	| exp GE exp				()
+
+negation: MINUS INT		%prec UMINUS				()
+
+strcomp: STRING EQ STRING				()
+	| STRING NEQ STRING				()
+	| STRING LT STRING				()
+	| STRING GT STRING				()
+	| STRING LE STRING				()
+	| STRING GE STRING				()
+
+seqexp: seqexp SEMICOLON exp				()
+	| exp				()
+
+sequencing: LPAREN seqexp RPAREN				()
+
+novalue: LPAREN RPAREN				()
+
+funccall: ID LPAREN RPAREN				()
+	| ID LPAREN param_list RPAREN				()
+
+param_list: exp				()
+	| param_list COMMA exp				()
+
+record_creation: ID LBRACE record_fields RBRACE				()
+
+record_fields: ID EQ exp fields				()
+	| NIL				()
+
+fields: COMMA ID EQ exp fields				()
+	| NIL				()
+
+array_creation: ID LBRACK exp RBRACK OF exp				()
+
+assign: lvalue ASSIGN exp				()
+
+if_then_else: IF exp THEN exp ELSE exp				()
+
+if_then: IF exp THEN exp				()
+
+while: WHILE exp DO exp				()
+
+forloop: FOR ID ASSIGN exp TO exp				()
+
+let: LET decs IN seqexp END					()
